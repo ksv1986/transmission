@@ -48,6 +48,7 @@ void TorrentFilter::onPrefChanged(int key)
         break;
 
     case Prefs::FILTER_MODE:
+    case Prefs::FILTER_PATH:
     case Prefs::FILTER_TRACKERS:
     case Prefs::SORT_MODE:
     case Prefs::SORT_REVERSED:
@@ -248,6 +249,12 @@ bool TorrentFilter::filterAcceptsRow(int source_row, QModelIndex const& source_p
         auto const display_name = prefs_.getString(Prefs::FILTER_TRACKERS);
         auto const key = FaviconCache::getKey(display_name);
         accepts = key.isEmpty() || tor.includesTracker(key);
+    }
+
+    if (accepts)
+    {
+        auto const path = prefs_.getString(Prefs::FILTER_PATH);
+        accepts = path.isEmpty() || tor.getPath() == path;
     }
 
     if (accepts)
