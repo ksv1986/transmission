@@ -29,6 +29,7 @@
 enum
 {
     ActivityRole = FilterBarComboBox::UserRole,
+    PathRole,
     TrackerRole
 };
 
@@ -95,48 +96,46 @@ QString getCountString(int n)
     return QString::fromLatin1("%L1").arg(n);
 }
 
+FilterBarComboBox* createCombo(QWidget* parent, int role, int count, QStandardItemModel* model)
+{
+    auto* c = new FilterBarComboBox(parent);
+    auto* delegate = new FilterBarComboBoxDelegate(parent, c);
+    c->setItemDelegate(delegate);
+
+    auto* row = new QStandardItem(parent->tr("All"));
+    row->setData(QString(), role);
+    row->setData(count, FilterBarComboBox::CountRole);
+    row->setData(getCountString(static_cast<size_t>(count)), FilterBarComboBox::CountStringRole);
+    model->appendRow(row);
+
+    model->appendRow(new QStandardItem); // separator
+    delegate->setSeparator(model, model->index(1, 0));
+
+    c->setModel(model);
+    return c;
+}
+
 } // namespace
 
-void FilterBar::refreshTrackers()
+void FilterBar::refreshFilter(Map& map, QStandardItemModel* model, Counts& counts, QStandardItem* (*update)(QStandardItem* i,
+    MapIter const& it), int key)
 {
     enum
     {
         ROW_TOTALS = 0, ROW_SEPARATOR, ROW_FIRST_TRACKER
     };
 
-    auto torrentsPerHost = std::unordered_map<QString, int>{};
-    for (auto const& tor : myTorrents.torrents())
-    {
-        for (auto const& displayName : tor->trackerDisplayNames())
-        {
-            ++torrentsPerHost[displayName];
-        }
-    }
-
     // update the "All" row
-    auto const num_trackers = torrentsPerHost.size();
-    auto item = myTrackerModel->item(ROW_TOTALS);
-    item->setData(int(num_trackers), FilterBarComboBox::CountRole);
-    item->setData(getCountString(num_trackers), FilterBarComboBox::CountStringRole);
+    auto const num = counts.size();
+    auto item = model->item(ROW_TOTALS);
+    item->setData(int(num), FilterBarComboBox::CountRole);
+    item->setData(getCountString(num), FilterBarComboBox::CountStringRole);
 
-    auto updateTrackerItem = [](QStandardItem* i, auto const& it)
-        {
-            auto const& displayName = it->first;
-            auto const& count = it->second;
-            auto const icon = qApp->faviconCache().find(FaviconCache::getKey(displayName));
-            i->setData(displayName, Qt::DisplayRole);
-            i->setData(displayName, TrackerRole);
-            i->setData(getCountString(count), FilterBarComboBox::CountStringRole);
-            i->setData(icon, Qt::DecorationRole);
-            i->setData(int(count), FilterBarComboBox::CountRole);
-            return i;
-        };
-
-    auto newTrackers = std::map<QString, int>(torrentsPerHost.begin(), torrentsPerHost.end());
-    auto old_it = myTrackerCounts.cbegin();
-    auto new_it = newTrackers.cbegin();
-    auto const old_end = myTrackerCounts.cend();
-    auto const new_end = newTrackers.cend();
+    auto newMap = Map(counts.begin(), counts.end());
+    auto old_it = map.cbegin();
+    auto new_it = newMap.cbegin();
+    auto const old_end = map.cend();
+    auto const new_end = newMap.cend();
     bool anyAdded = false;
     int row = ROW_FIRST_TRACKER;
 
@@ -144,19 +143,19 @@ void FilterBar::refreshTrackers()
     {
         if ((old_it == old_end) || ((new_it != new_end) && (old_it->first > new_it->first)))
         {
-            myTrackerModel->insertRow(row, updateTrackerItem(new QStandardItem(1), new_it));
+            model->insertRow(row, update(new QStandardItem(1), new_it));
             anyAdded = true;
             ++new_it;
             ++row;
         }
         else if ((new_it == new_end) || ((old_it != old_end) && (old_it->first < new_it->first)))
         {
-            myTrackerModel->removeRow(row);
+            model->removeRow(row);
             ++old_it;
         }
         else // update
         {
-            updateTrackerItem(myTrackerModel->item(row), new_it);
+            update(model->item(row), new_it);
             ++old_it;
             ++new_it;
             ++row;
@@ -165,30 +164,65 @@ void FilterBar::refreshTrackers()
 
     if (anyAdded) // the one added might match our filter...
     {
-        refreshPref(Prefs::FILTER_TRACKERS);
+        refreshPref(key);
     }
 
-    myTrackerCounts.swap(newTrackers);
+    map.swap(newMap);
+}
+
+void FilterBar::refreshTrackers()
+{
+    auto torrentsPerPath = Counts{};
+    auto torrentsPerHost = Counts{};
+    for (auto const& tor : myTorrents.torrents())
+    {
+        for (auto const& displayName : tor->trackerDisplayNames())
+        {
+            ++torrentsPerHost[displayName];
+        }
+
+        ++torrentsPerPath[tor->getPath()];
+    }
+
+    auto updateTrackerItem = [](QStandardItem* i, auto const& it)
+    {
+        auto const& displayName = it->first;
+        auto const& count = it->second;
+        auto const icon = qApp->faviconCache().find(FaviconCache::getKey(displayName));
+        i->setData(displayName, Qt::DisplayRole);
+        i->setData(displayName, TrackerRole);
+        i->setData(getCountString(count), FilterBarComboBox::CountStringRole);
+        i->setData(icon, Qt::DecorationRole);
+        i->setData(int(count), FilterBarComboBox::CountRole);
+        return i;
+    };
+
+    refreshFilter(myTrackerCounts, myTrackerModel, torrentsPerHost, updateTrackerItem, Prefs::FILTER_TRACKERS);
+
+    auto updatePathItem = [](QStandardItem* i, auto const& it)
+    {
+        auto const& displayName = it->first;
+        auto const& count = it->second;
+        auto const icon = Utils::getFolderIcon();
+        i->setData(displayName, Qt::DisplayRole);
+        i->setData(displayName, PathRole);
+        i->setData(getCountString(count), FilterBarComboBox::CountStringRole);
+        i->setData(icon, Qt::DecorationRole);
+        i->setData(int(count), FilterBarComboBox::CountRole);
+        return i;
+    };
+
+    refreshFilter(myPathCounts, myPathModel, torrentsPerPath, updatePathItem, Prefs::FILTER_PATH);
 }
 
 FilterBarComboBox* FilterBar::createTrackerCombo(QStandardItemModel* model)
 {
-    FilterBarComboBox* c = new FilterBarComboBox(this);
-    FilterBarComboBoxDelegate* delegate = new FilterBarComboBoxDelegate(this, c);
-    c->setItemDelegate(delegate);
+    return createCombo(this, TrackerRole, myTorrents.rowCount(), model);
+}
 
-    QStandardItem* row = new QStandardItem(tr("All"));
-    row->setData(QString(), TrackerRole);
-    int const count = myTorrents.rowCount();
-    row->setData(count, FilterBarComboBox::CountRole);
-    row->setData(getCountString(count), FilterBarComboBox::CountStringRole);
-    model->appendRow(row);
-
-    model->appendRow(new QStandardItem); // separator
-    delegate->setSeparator(model, model->index(1, 0));
-
-    c->setModel(model);
-    return c;
+FilterBarComboBox* FilterBar::createPathCombo(QStandardItemModel* model)
+{
+    return createCombo(this, PathRole, myTorrents.rowCount(), model);
 }
 
 /***
@@ -212,6 +246,10 @@ FilterBar::FilterBar(Prefs& prefs, TorrentModel const& torrents, TorrentFilter c
     myActivityCombo = createActivityCombo();
     h->addWidget(myActivityCombo);
 
+    myPathModel = new QStandardItemModel(this);
+    myPathCombo = createPathCombo(myPathModel);
+    h->addWidget(myPathCombo);
+
     myTrackerModel = new QStandardItemModel(this);
     myTrackerCombo = createTrackerCombo(myTrackerModel);
     h->addWidget(myTrackerCombo);
@@ -228,6 +266,7 @@ FilterBar::FilterBar(Prefs& prefs, TorrentModel const& torrents, TorrentFilter c
     // listen for changes from the other players
     connect(&myPrefs, SIGNAL(changed(int)), this, SLOT(refreshPref(int)));
     connect(myActivityCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(onActivityIndexChanged(int)));
+    connect(myPathCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(onPathIndexChanged(int)));
     connect(myTrackerCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(onTrackerIndexChanged(int)));
     connect(&myTorrents, SIGNAL(modelReset()), this, SLOT(recountSoon()));
     connect(&myTorrents, SIGNAL(rowsInserted(QModelIndex, int, int)), this, SLOT(recountSoon()));
@@ -308,6 +347,17 @@ void FilterBar::onTextChanged(QString const& str)
     {
         myPrefs.set(Prefs::FILTER_TEXT, str.trimmed());
     }
+}
+
+void FilterBar::onPathIndexChanged(int i)
+{
+    if (myIsBootstrapping)
+    {
+        return;
+    }
+
+    QString path = myPathCombo->itemData(i, PathRole).toString();
+    myPrefs.set(Prefs::FILTER_PATH, path);
 }
 
 void FilterBar::onTrackerIndexChanged(int i)

@@ -194,11 +194,11 @@ MainWindow::MainWindow(Session& session, Prefs& prefs, TorrentModel& model, bool
     ui.action_QueueMoveBottom->setIcon(getStockIcon(QLatin1String("go-bottom")));
 
     auto makeNetworkPixmap = [this](char const* nameIn, QSize size = QSize(16, 16))
-        {
-            QString const name = QLatin1String(nameIn);
-            QIcon const icon = getStockIcon(name, QStyle::SP_DriveNetIcon);
-            return icon.pixmap(size);
-        };
+    {
+        QString const name = QLatin1String(nameIn);
+        QIcon const icon = getStockIcon(name, QStyle::SP_DriveNetIcon);
+        return icon.pixmap(size);
+    };
     myPixmapNetworkError = makeNetworkPixmap("network-error");
     myPixmapNetworkIdle = makeNetworkPixmap("network-idle");
     myPixmapNetworkReceive = makeNetworkPixmap("network-receive");
@@ -403,62 +403,62 @@ void MainWindow::initStatusBar()
 QMenu* MainWindow::createOptionsMenu()
 {
     auto const initSpeedSubMenu = [this](QMenu* menu, QAction*& offAction, QAction*& onAction, int pref, int enabledPref)
+    {
+        int const stockSpeeds[] = { 5, 10, 20, 30, 40, 50, 75, 100, 150, 200, 250, 500, 750 };
+        int const currentValue = myPrefs.get<int>(pref);
+
+        QActionGroup* actionGroup = new QActionGroup(this);
+
+        offAction = menu->addAction(tr("Unlimited"));
+        offAction->setCheckable(true);
+        offAction->setProperty(PREF_VARIANTS_KEY, QVariantList() << enabledPref << false);
+        actionGroup->addAction(offAction);
+        connect(offAction, SIGNAL(triggered(bool)), this, SLOT(onSetPrefs(bool)));
+
+        onAction = menu->addAction(tr("Limited at %1").arg(Formatter::speedToString(Speed::fromKBps(currentValue))));
+        onAction->setCheckable(true);
+        onAction->setProperty(PREF_VARIANTS_KEY, QVariantList() << pref << currentValue << enabledPref << true);
+        actionGroup->addAction(onAction);
+        connect(onAction, SIGNAL(triggered(bool)), this, SLOT(onSetPrefs(bool)));
+
+        menu->addSeparator();
+
+        for (int const i : stockSpeeds)
         {
-            int const stockSpeeds[] = { 5, 10, 20, 30, 40, 50, 75, 100, 150, 200, 250, 500, 750 };
-            int const currentValue = myPrefs.get<int>(pref);
-
-            QActionGroup* actionGroup = new QActionGroup(this);
-
-            offAction = menu->addAction(tr("Unlimited"));
-            offAction->setCheckable(true);
-            offAction->setProperty(PREF_VARIANTS_KEY, QVariantList() << enabledPref << false);
-            actionGroup->addAction(offAction);
-            connect(offAction, SIGNAL(triggered(bool)), this, SLOT(onSetPrefs(bool)));
-
-            onAction = menu->addAction(tr("Limited at %1").arg(Formatter::speedToString(Speed::fromKBps(currentValue))));
-            onAction->setCheckable(true);
-            onAction->setProperty(PREF_VARIANTS_KEY, QVariantList() << pref << currentValue << enabledPref << true);
-            actionGroup->addAction(onAction);
-            connect(onAction, SIGNAL(triggered(bool)), this, SLOT(onSetPrefs(bool)));
-
-            menu->addSeparator();
-
-            for (int const i : stockSpeeds)
-            {
-                QAction* action = menu->addAction(Formatter::speedToString(Speed::fromKBps(i)));
-                action->setProperty(PREF_VARIANTS_KEY, QVariantList() << pref << i << enabledPref << true);
-                connect(action, SIGNAL(triggered(bool)), this, SLOT(onSetPrefs()));
-            }
-        };
+            QAction* action = menu->addAction(Formatter::speedToString(Speed::fromKBps(i)));
+            action->setProperty(PREF_VARIANTS_KEY, QVariantList() << pref << i << enabledPref << true);
+            connect(action, SIGNAL(triggered(bool)), this, SLOT(onSetPrefs()));
+        }
+    };
 
     auto const initSeedRatioSubMenu = [this](QMenu* menu, QAction*& offAction, QAction*& onAction, int pref, int enabledPref)
+    {
+        double const stockRatios[] = { 0.25, 0.50, 0.75, 1, 1.5, 2, 3 };
+        double const currentValue = myPrefs.get<double>(pref);
+
+        QActionGroup* actionGroup = new QActionGroup(this);
+
+        offAction = menu->addAction(tr("Seed Forever"));
+        offAction->setCheckable(true);
+        offAction->setProperty(PREF_VARIANTS_KEY, QVariantList() << enabledPref << false);
+        actionGroup->addAction(offAction);
+        connect(offAction, SIGNAL(triggered(bool)), this, SLOT(onSetPrefs(bool)));
+
+        onAction = menu->addAction(tr("Stop at Ratio (%1)").arg(Formatter::ratioToString(currentValue)));
+        onAction->setCheckable(true);
+        onAction->setProperty(PREF_VARIANTS_KEY, QVariantList() << pref << currentValue << enabledPref << true);
+        actionGroup->addAction(onAction);
+        connect(onAction, SIGNAL(triggered(bool)), this, SLOT(onSetPrefs(bool)));
+
+        menu->addSeparator();
+
+        for (double const i : stockRatios)
         {
-            double const stockRatios[] = { 0.25, 0.50, 0.75, 1, 1.5, 2, 3 };
-            double const currentValue = myPrefs.get<double>(pref);
-
-            QActionGroup* actionGroup = new QActionGroup(this);
-
-            offAction = menu->addAction(tr("Seed Forever"));
-            offAction->setCheckable(true);
-            offAction->setProperty(PREF_VARIANTS_KEY, QVariantList() << enabledPref << false);
-            actionGroup->addAction(offAction);
-            connect(offAction, SIGNAL(triggered(bool)), this, SLOT(onSetPrefs(bool)));
-
-            onAction = menu->addAction(tr("Stop at Ratio (%1)").arg(Formatter::ratioToString(currentValue)));
-            onAction->setCheckable(true);
-            onAction->setProperty(PREF_VARIANTS_KEY, QVariantList() << pref << currentValue << enabledPref << true);
-            actionGroup->addAction(onAction);
-            connect(onAction, SIGNAL(triggered(bool)), this, SLOT(onSetPrefs(bool)));
-
-            menu->addSeparator();
-
-            for (double const i : stockRatios)
-            {
-                QAction* action = menu->addAction(Formatter::ratioToString(i));
-                action->setProperty(PREF_VARIANTS_KEY, QVariantList() << pref << i << enabledPref << true);
-                connect(action, SIGNAL(triggered(bool)), this, SLOT(onSetPrefs()));
-            }
-        };
+            QAction* action = menu->addAction(Formatter::ratioToString(i));
+            action->setProperty(PREF_VARIANTS_KEY, QVariantList() << pref << i << enabledPref << true);
+            connect(action, SIGNAL(triggered(bool)), this, SLOT(onSetPrefs()));
+        }
+    };
 
     QMenu* menu = new QMenu(this);
 

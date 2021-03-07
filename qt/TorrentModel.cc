@@ -163,11 +163,11 @@ void TorrentModel::updateTorrents(tr_variant* torrents, bool isCompleteList)
 
     auto const now = time(nullptr);
     auto const recently_added = [now](auto const& tor)
-        {
-            static auto constexpr max_age = 60;
-            auto const date = tor->dateAdded();
-            return (date != 0) && (difftime(now, date) < max_age);
-        };
+    {
+        static auto constexpr max_age = 60;
+        auto const date = tor->dateAdded();
+        return (date != 0) && (difftime(now, date) < max_age);
+    };
 
     // build a list of the property keys
     tr_variant* const firstChild = tr_variantListChild(torrents, 0);

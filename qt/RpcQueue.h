@@ -50,7 +50,7 @@ public:
 private:
     // Internally queued function. Takes the last response future, makes a
     // request and returns a new response future.
-    typedef std::function<RpcResponseFuture(RpcResponseFuture const&)> QueuedFunction;
+    typedef std::function<RpcResponseFuture (RpcResponseFuture const&)> QueuedFunction;
 
     // Internally stored error handler function. Takes the last response future and returns nothing.
     typedef std::function<void (RpcResponseFuture const&)> ErrorHandlerFunction;

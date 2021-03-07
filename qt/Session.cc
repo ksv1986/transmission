@@ -96,21 +96,21 @@ void Session::portTest()
     RpcQueue* q = new RpcQueue();
 
     q->add([this]()
-        {
-            return exec("port-test", nullptr);
-        });
+    {
+        return exec("port-test", nullptr);
+    });
 
     q->add([this](RpcResponse const& r)
+    {
+        bool isOpen = false;
+
+        if (r.success)
         {
-            bool isOpen = false;
+            (void)tr_variantDictFindBool(r.args.get(), TR_KEY_port_is_open, &isOpen);
+        }
 
-            if (r.success)
-            {
-                (void)tr_variantDictFindBool(r.args.get(), TR_KEY_port_is_open, &isOpen);
-            }
-
-            emit portTested(isOpen);
-        });
+        emit portTested(isOpen);
+    });
 
     q->run();
 }
@@ -125,27 +125,27 @@ void Session::copyMagnetLinkToClipboard(int torrentId)
     RpcQueue* q = new RpcQueue();
 
     q->add([this, &args]()
-        {
-            return exec(TR_KEY_torrent_get, &args);
-        });
+    {
+        return exec(TR_KEY_torrent_get, &args);
+    });
 
     q->add([](RpcResponse const& r)
+    {
+        tr_variant* torrents;
+
+        if (!tr_variantDictFindList(r.args.get(), TR_KEY_torrents, &torrents))
         {
-            tr_variant* torrents;
+            return;
+        }
 
-            if (!tr_variantDictFindList(r.args.get(), TR_KEY_torrents, &torrents))
-            {
-                return;
-            }
+        tr_variant* const child = tr_variantListChild(torrents, 0);
+        char const* str;
 
-            tr_variant* const child = tr_variantListChild(torrents, 0);
-            char const* str;
-
-            if (child != nullptr && tr_variantDictFindStr(child, TR_KEY_magnetLink, &str, nullptr))
-            {
-                qApp->clipboard()->setText(QString::fromUtf8(str));
-            }
-        });
+        if (child != nullptr && tr_variantDictFindStr(child, TR_KEY_magnetLink, &str, nullptr))
+        {
+            qApp->clipboard()->setText(QString::fromUtf8(str));
+        }
+    });
 
     q->run();
 }
@@ -537,9 +537,9 @@ void Session::torrentRenamePath(torrent_ids_t const& ids, QString const& oldpath
         });
 
     q->add([this, ids](RpcResponse const& /*r*/)
-        {
-            refreshTorrents(ids, { TR_KEY_fileStats, TR_KEY_files, TR_KEY_id, TR_KEY_name });
-        });
+    {
+        refreshTorrents(ids, { TR_KEY_fileStats, TR_KEY_files, TR_KEY_id, TR_KEY_name });
+    });
 
     q->run();
 }
@@ -555,26 +555,26 @@ void Session::refreshTorrents(torrent_ids_t const& ids, KeyList const& keys)
     RpcQueue* q = new RpcQueue();
 
     q->add([this, &args]()
-        {
-            return exec(TR_KEY_torrent_get, &args);
-        });
+    {
+        return exec(TR_KEY_torrent_get, &args);
+    });
 
     bool const allTorrents = ids.empty();
 
     q->add([this, allTorrents](RpcResponse const& r)
+    {
+        tr_variant* torrents;
+
+        if (tr_variantDictFindList(r.args.get(), TR_KEY_torrents, &torrents))
         {
-            tr_variant* torrents;
+            emit torrentsUpdated(torrents, allTorrents);
+        }
 
-            if (tr_variantDictFindList(r.args.get(), TR_KEY_torrents, &torrents))
-            {
-                emit torrentsUpdated(torrents, allTorrents);
-            }
-
-            if (tr_variantDictFindList(r.args.get(), TR_KEY_removed, &torrents))
-            {
-                emit torrentsRemoved(torrents);
-            }
-        });
+        if (tr_variantDictFindList(r.args.get(), TR_KEY_removed, &torrents))
+        {
+            emit torrentsRemoved(torrents);
+        }
+    });
 
     q->run();
 }
@@ -598,14 +598,14 @@ void Session::sendTorrentRequest(char const* request, torrent_ids_t const& ids)
     RpcQueue* q = new RpcQueue();
 
     q->add([this, request, &args]()
-        {
-            return exec(request, &args);
-        });
+    {
+        return exec(request, &args);
+    });
 
     q->add([this, ids]()
-        {
-            refreshTorrents(ids, Torrent::mainStatKeys);
-        });
+    {
+        refreshTorrents(ids, Torrent::mainStatKeys);
+    });
 
     q->run();
 }
@@ -665,14 +665,14 @@ void Session::refreshSessionStats()
     RpcQueue* q = new RpcQueue();
 
     q->add([this]()
-        {
-            return exec("session-stats", nullptr);
-        });
+    {
+        return exec("session-stats", nullptr);
+    });
 
     q->add([this](RpcResponse const& r)
-        {
-            updateStats(r.args.get());
-        });
+    {
+        updateStats(r.args.get());
+    });
 
     q->run();
 }
@@ -682,14 +682,14 @@ void Session::refreshSessionInfo()
     RpcQueue* q = new RpcQueue();
 
     q->add([this]()
-        {
-            return exec("session-get", nullptr);
-        });
+    {
+        return exec("session-get", nullptr);
+    });
 
     q->add([this](RpcResponse const& r)
-        {
-            updateInfo(r.args.get());
-        });
+    {
+        updateInfo(r.args.get());
+    });
 
     q->run();
 }
@@ -699,19 +699,19 @@ void Session::updateBlocklist()
     RpcQueue* q = new RpcQueue();
 
     q->add([this]()
-        {
-            return exec("blocklist-update", nullptr);
-        });
+    {
+        return exec("blocklist-update", nullptr);
+    });
 
     q->add([this](RpcResponse const& r)
-        {
-            int64_t blocklistSize;
+    {
+        int64_t blocklistSize;
 
-            if (tr_variantDictFindInt(r.args.get(), TR_KEY_blocklist_size, &blocklistSize))
-            {
-                setBlocklistSize(blocklistSize);
-            }
-        });
+        if (tr_variantDictFindInt(r.args.get(), TR_KEY_blocklist_size, &blocklistSize))
+        {
+            setBlocklistSize(blocklistSize);
+        }
+    });
 
     q->run();
 }
@@ -987,35 +987,35 @@ void Session::addTorrent(AddData const& addMe, tr_variant* args, bool trashOrigi
         });
 
     q->add([addMe](RpcResponse const& r)
+    {
+        tr_variant* dup;
+
+        if (!tr_variantDictFindDict(r.args.get(), TR_KEY_torrent_duplicate, &dup))
         {
-            tr_variant* dup;
+            return;
+        }
 
-            if (!tr_variantDictFindDict(r.args.get(), TR_KEY_torrent_duplicate, &dup))
-            {
-                return;
-            }
+        char const* str;
 
-            char const* str;
-
-            if (tr_variantDictFindStr(dup, TR_KEY_name, &str, nullptr))
-            {
-                QString const name = QString::fromUtf8(str);
-                QMessageBox* d = new QMessageBox(QMessageBox::Warning, tr("Add Torrent"),
-                    tr("<p><b>Unable to add \"%1\".</b></p><p>It is a duplicate of \"%2\" which is already added.</p>").
-                        arg(addMe.readableShortName()).arg(name), QMessageBox::Close, qApp->activeWindow());
-                QObject::connect(d, &QMessageBox::rejected, d, &QMessageBox::deleteLater);
-                d->show();
-            }
-        });
+        if (tr_variantDictFindStr(dup, TR_KEY_name, &str, nullptr))
+        {
+            QString const name = QString::fromUtf8(str);
+            QMessageBox* d = new QMessageBox(QMessageBox::Warning, tr("Add Torrent"),
+                tr("<p><b>Unable to add \"%1\".</b></p><p>It is a duplicate of \"%2\" which is already added.</p>").
+                    arg(addMe.readableShortName()).arg(name), QMessageBox::Close, qApp->activeWindow());
+            QObject::connect(d, &QMessageBox::rejected, d, &QMessageBox::deleteLater);
+            d->show();
+        }
+    });
 
     if (trashOriginal && addMe.type == AddData::FILENAME)
     {
         q->add([addMe]()
-            {
-                QFile original(addMe.filename);
-                original.setPermissions(QFile::ReadOwner | QFile::WriteOwner);
-                original.remove();
-            });
+        {
+            QFile original(addMe.filename);
+            original.setPermissions(QFile::ReadOwner | QFile::WriteOwner);
+            original.remove();
+        });
     }
 
     q->run();

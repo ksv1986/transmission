@@ -71,35 +71,35 @@ void FreeSpaceLabel::onTimer()
     RpcQueue* q = new RpcQueue();
 
     q->add([this, &args]()
-        {
-            return mySession->exec("free-space", &args);
-        });
+    {
+        return mySession->exec("free-space", &args);
+    });
 
     q->add([this](RpcResponse const& r)
+    {
+        QString str;
+
+        // update the label
+        int64_t bytes = -1;
+
+        if (tr_variantDictFindInt(r.args.get(), TR_KEY_size_bytes, &bytes) && bytes >= 0)
         {
-            QString str;
+            setText(tr("%1 free").arg(Formatter::sizeToString(bytes)));
+        }
+        else
+        {
+            setText(QString());
+        }
 
-            // update the label
-            int64_t bytes = -1;
+        // update the tooltip
+        size_t len = 0;
+        char const* path = nullptr;
+        tr_variantDictFindStr(r.args.get(), TR_KEY_path, &path, &len);
+        str = QString::fromUtf8(path, len);
+        setToolTip(QDir::toNativeSeparators(str));
 
-            if (tr_variantDictFindInt(r.args.get(), TR_KEY_size_bytes, &bytes) && bytes >= 0)
-            {
-                setText(tr("%1 free").arg(Formatter::sizeToString(bytes)));
-            }
-            else
-            {
-                setText(QString());
-            }
-
-            // update the tooltip
-            size_t len = 0;
-            char const* path = nullptr;
-            tr_variantDictFindStr(r.args.get(), TR_KEY_path, &path, &len);
-            str = QString::fromUtf8(path, len);
-            setToolTip(QDir::toNativeSeparators(str));
-
-            myTimer.start();
-        });
+        myTimer.start();
+    });
 
     q->run();
 }

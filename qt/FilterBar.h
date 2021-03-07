@@ -8,12 +8,14 @@
 
 #pragma once
 
+#include <map>
 #include <unordered_map>
 
 #include <QWidget>
 
 class QLabel;
 class QLineEdit;
+class QStandardItem;
 class QStandardItemModel;
 class QTimer;
 
@@ -34,8 +36,15 @@ public slots:
     void clear();
 
 private:
+    using Map = std::map<QString, int>;
+    using MapIter = Map::const_iterator;
+    using Counts = std::unordered_map<QString, int>;
+
     FilterBarComboBox* createTrackerCombo(QStandardItemModel*);
     FilterBarComboBox* createActivityCombo();
+    FilterBarComboBox* createPathCombo(QStandardItemModel*);
+    void refreshFilter(Map& map, QStandardItemModel* model, Counts& counts, QStandardItem* (*update)(QStandardItem* i,
+        MapIter const& it), int key);
     void refreshTrackers();
 
 private slots:
@@ -43,6 +52,7 @@ private slots:
     void recount();
     void refreshPref(int key);
     void onActivityIndexChanged(int index);
+    void onPathIndexChanged(int index);
     void onTrackerIndexChanged(int index);
     void onTextChanged(QString const&);
 
@@ -52,11 +62,14 @@ private:
     TorrentFilter const& myFilter;
 
     FilterBarComboBox* myActivityCombo;
+    FilterBarComboBox* myPathCombo;
     FilterBarComboBox* myTrackerCombo;
     QLabel* myCountLabel;
+    QStandardItemModel* myPathModel;
     QStandardItemModel* myTrackerModel;
     QTimer* myRecountTimer;
     bool myIsBootstrapping;
     QLineEdit* myLineEdit;
-    std::map<QString, int> myTrackerCounts;
+    Map myPathCounts;
+    Map myTrackerCounts;
 };

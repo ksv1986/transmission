@@ -52,6 +52,7 @@ void TorrentFilter::onPrefChanged(int key)
         break;
 
     case Prefs::FILTER_MODE:
+    case Prefs::FILTER_PATH:
     case Prefs::FILTER_TRACKERS:
     case Prefs::SORT_MODE:
     case Prefs::SORT_REVERSED:
@@ -235,6 +236,16 @@ bool TorrentFilter::lessThan(QModelIndex const& left, QModelIndex const& right) 
 ****
 ***/
 
+namespace
+{
+
+bool pathFilterAcceptsTorrent(Torrent const* tor, QString const& path)
+{
+    return path.isEmpty() || tor->getPath() == path;
+}
+
+} // namespace
+
 bool TorrentFilter::trackerFilterAcceptsTorrent(Torrent const* tor, QString const& tracker) const
 {
     return tracker.isEmpty() || tor->hasTrackerSubstring(tracker);
@@ -298,6 +309,12 @@ bool TorrentFilter::filterAcceptsRow(int sourceRow, QModelIndex const& sourcePar
     {
         QString const trackers = myPrefs.getString(Prefs::FILTER_TRACKERS);
         accepts = trackerFilterAcceptsTorrent(tor, trackers);
+    }
+
+    if (accepts)
+    {
+        QString const path = myPrefs.getString(Prefs::FILTER_PATH);
+        accepts = pathFilterAcceptsTorrent(tor, path);
     }
 
     if (accepts)
