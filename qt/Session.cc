@@ -504,7 +504,16 @@ void Session::torrentSetLocation(torrent_ids_t const& ids, QString const& locati
     tr_variantDictAddStr(&args, TR_KEY_location, location.toUtf8().constData());
     tr_variantDictAddBool(&args, TR_KEY_move, doMove);
 
-    exec(TR_KEY_torrent_set_location, &args);
+    RpcQueue* q = new RpcQueue();
+    q->add([this, &args]()
+    {
+        return exec(TR_KEY_torrent_set_location, &args);
+    });
+    q->add([this, ids]()
+    {
+        refreshTorrents(ids, Torrent::mainInfoKeys);
+    });
+    q->run();
 }
 
 void Session::torrentRenamePath(torrent_ids_t const& ids, QString const& oldpath, QString const& newname)
