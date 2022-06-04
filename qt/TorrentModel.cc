@@ -10,9 +10,15 @@
 #include <iostream>
 #include <utility>
 
+#include <QSortFilterProxyModel>
+#include <QStandardItemModel>
+
 #include <libtransmission/transmission.h>
 #include <libtransmission/variant.h>
 
+#include "Application.h"
+#include "FaviconCache.h"
+#include "Prefs.h"
 #include "Speed.h"
 #include "Torrent.h"
 #include "TorrentDelegate.h"
@@ -56,6 +62,18 @@ auto getIds(Iter it, Iter end)
     return ids;
 }
 
+class PathProxy : public QSortFilterProxyModel
+{
+public:
+    using QSortFilterProxyModel::QSortFilterProxyModel;
+
+protected:
+    bool filterAcceptsRow(int source_row, QModelIndex const& source_parent) const
+    {
+        return source_row > 0; // skip "All" item
+    }
+};
+
 } // namespace
 
 /***
@@ -65,6 +83,11 @@ auto getIds(Iter it, Iter end)
 TorrentModel::TorrentModel(Prefs const& prefs) :
     myPrefs(prefs)
 {
+    myPathModel = new QStandardItemModel(this);
+    myTrackerModel = new QStandardItemModel(this);
+    auto proxy = new PathProxy(this);
+    proxy->setSourceModel(myPathModel);
+    myPathProxy = proxy;
 }
 
 TorrentModel::~TorrentModel()
@@ -478,4 +501,116 @@ bool TorrentModel::hasTorrent(QString const& hashString) const
 {
     auto test = [hashString](auto const& tor) { return tor->hashString() == hashString; };
     return std::any_of(myTorrents.cbegin(), myTorrents.cend(), test);
+}
+
+/***
+****
+***/
+
+namespace
+{
+
+QString getCountString(int n)
+{
+    return QString::fromLatin1("%L1").arg(n);
+}
+
+} // namespace
+
+void TorrentModel::refreshFilter(Map& map, QStandardItemModel* model, Counts& counts, QStandardItem* (*update)(QStandardItem* i,
+    MapIter const& it), int key)
+{
+    enum
+    {
+        ROW_TOTALS = 0, ROW_SEPARATOR, ROW_FIRST_TRACKER
+    };
+
+    // update the "All" row
+    auto const num = counts.size();
+    auto item = model->item(ROW_TOTALS);
+    item->setData(int(num), CountRole);
+    item->setData(getCountString(num), CountStringRole);
+
+    auto newMap = Map(counts.begin(), counts.end());
+    auto old_it = map.cbegin();
+    auto new_it = newMap.cbegin();
+    auto const old_end = map.cend();
+    auto const new_end = newMap.cend();
+    bool anyAdded = false;
+    int row = ROW_FIRST_TRACKER;
+
+    while ((old_it != old_end) || (new_it != new_end))
+    {
+        if ((old_it == old_end) || ((new_it != new_end) && (old_it->first > new_it->first)))
+        {
+            model->insertRow(row, update(new QStandardItem(1), new_it));
+            anyAdded = true;
+            ++new_it;
+            ++row;
+        }
+        else if ((new_it == new_end) || ((old_it != old_end) && (old_it->first < new_it->first)))
+        {
+            model->removeRow(row);
+            ++old_it;
+        }
+        else // update
+        {
+            update(model->item(row), new_it);
+            ++old_it;
+            ++new_it;
+            ++row;
+        }
+    }
+
+    if (anyAdded)
+    {
+        emit filterChanged(key);
+    }
+
+    map.swap(newMap);
+}
+
+void TorrentModel::refreshModels()
+{
+    auto torrentsPerPath = Counts{};
+    auto torrentsPerHost = Counts{};
+    for (auto const& tor : torrents())
+    {
+        for (auto const& displayName : tor->trackerDisplayNames())
+        {
+            ++torrentsPerHost[displayName];
+        }
+
+        ++torrentsPerPath[tor->getPath()];
+    }
+
+    auto updateTrackerItem = [](QStandardItem* i, auto const& it)
+    {
+        auto const& displayName = it->first;
+        auto const& count = it->second;
+        auto const icon = qApp->faviconCache().find(FaviconCache::getKey(displayName));
+        i->setData(displayName, Qt::DisplayRole);
+        i->setData(displayName, TrackerRole);
+        i->setData(getCountString(count), CountStringRole);
+        i->setData(icon, Qt::DecorationRole);
+        i->setData(int(count), CountRole);
+        return i;
+    };
+
+    refreshFilter(myTrackerCounts, myTrackerModel, torrentsPerHost, updateTrackerItem, Prefs::FILTER_TRACKERS);
+
+    auto updatePathItem = [](QStandardItem* i, auto const& it)
+    {
+        auto const& displayName = it->first;
+        auto const& count = it->second;
+        auto const icon = Utils::getFolderIcon();
+        i->setData(displayName, Qt::DisplayRole);
+        i->setData(displayName, PathRole);
+        i->setData(getCountString(count), CountStringRole);
+        i->setData(icon, Qt::DecorationRole);
+        i->setData(int(count), CountRole);
+        return i;
+    };
+
+    refreshFilter(myPathCounts, myPathModel, torrentsPerPath, updatePathItem, Prefs::FILTER_PATH);
 }

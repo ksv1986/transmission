@@ -8,9 +8,6 @@
 
 #pragma once
 
-#include <map>
-#include <unordered_map>
-
 #include <QWidget>
 
 class QLabel;
@@ -29,22 +26,16 @@ class FilterBar : public QWidget
     Q_OBJECT
 
 public:
-    FilterBar(Prefs& prefs, TorrentModel const& torrents, TorrentFilter const& filter, QWidget* parent = nullptr);
+    FilterBar(Prefs& prefs, TorrentModel& torrents, TorrentFilter const& filter, QWidget* parent = nullptr);
     virtual ~FilterBar();
 
 public slots:
     void clear();
 
 private:
-    using Map = std::map<QString, int>;
-    using MapIter = Map::const_iterator;
-    using Counts = std::unordered_map<QString, int>;
-
     FilterBarComboBox* createTrackerCombo(QStandardItemModel*);
     FilterBarComboBox* createActivityCombo();
     FilterBarComboBox* createPathCombo(QStandardItemModel*);
-    void refreshFilter(Map& map, QStandardItemModel* model, Counts& counts, QStandardItem* (*update)(QStandardItem* i,
-        MapIter const& it), int key);
     void refreshTrackers();
 
 private slots:
@@ -58,18 +49,14 @@ private slots:
 
 private:
     Prefs& myPrefs;
-    TorrentModel const& myTorrents;
+    TorrentModel& myTorrents;
     TorrentFilter const& myFilter;
 
     FilterBarComboBox* myActivityCombo;
     FilterBarComboBox* myPathCombo;
     FilterBarComboBox* myTrackerCombo;
     QLabel* myCountLabel;
-    QStandardItemModel* myPathModel;
-    QStandardItemModel* myTrackerModel;
     QTimer* myRecountTimer;
     bool myIsBootstrapping;
     QLineEdit* myLineEdit;
-    Map myPathCounts;
-    Map myTrackerCounts;
 };

@@ -12,7 +12,10 @@
 
 #include "FilterBarComboBox.h"
 #include "StyleHelper.h"
+#include "TorrentModel.h"
 #include "Utils.h"
+
+#define CountStringRole TorrentModel::CountStringRole
 
 namespace
 {

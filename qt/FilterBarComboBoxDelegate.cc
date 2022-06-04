@@ -14,6 +14,7 @@
 #include "FilterBarComboBox.h"
 #include "FilterBarComboBoxDelegate.h"
 #include "StyleHelper.h"
+#include "TorrentModel.h"
 #include "Utils.h"
 
 namespace
@@ -84,7 +85,7 @@ void FilterBarComboBoxDelegate::paint(QPainter* painter, QStyleOptionViewItem co
             boundingBox);
         Utils::narrowRect(boundingBox, decorationRect.width() + hmargin, 0, option.direction);
 
-        QRect countRect = rect(option, index, FilterBarComboBox::CountStringRole);
+        QRect countRect = rect(option, index, TorrentModel::CountStringRole);
         countRect = QStyle::alignedRect(option.direction, Qt::AlignRight | Qt::AlignVCenter, countRect.size(), boundingBox);
         Utils::narrowRect(boundingBox, 0, countRect.width() + hmargin, option.direction);
         QRect const displayRect = boundingBox;
@@ -94,7 +95,7 @@ void FilterBarComboBoxDelegate::paint(QPainter* painter, QStyleOptionViewItem co
         drawBackground(painter, option, index);
         icon.paint(painter, decorationRect, Qt::AlignCenter, StyleHelper::getIconMode(option.state), QIcon::Off);
         drawDisplay(painter, option, displayRect, index.data(Qt::DisplayRole).toString());
-        drawDisplay(painter, disabledOption, countRect, index.data(FilterBarComboBox::CountStringRole).toString());
+        drawDisplay(painter, disabledOption, countRect, index.data(TorrentModel::CountStringRole).toString());
         drawFocus(painter, option, displayRect | countRect);
     }
 }
@@ -114,7 +115,7 @@ QSize FilterBarComboBoxDelegate::sizeHint(QStyleOptionViewItem const& option, QM
         QSize size = QItemDelegate::sizeHint(option, index);
         size.setHeight(qMax(size.height(), myCombo->iconSize().height() + 6));
         size.rwidth() += s->pixelMetric(QStyle::PM_FocusFrameHMargin, nullptr, myCombo);
-        size.rwidth() += rect(option, index, FilterBarComboBox::CountStringRole).width();
+        size.rwidth() += rect(option, index, TorrentModel::CountStringRole).width();
         size.rwidth() += hmargin * 4;
         return size;
     }

@@ -19,6 +19,7 @@
 #include "AddData.h" // AddData
 #include "BaseDialog.h"
 #include "Torrent.h" // FileList
+#include "TorrentModel.h"
 
 #include "ui_OptionsDialog.h"
 
@@ -35,7 +36,8 @@ class OptionsDialog : public BaseDialog
     Q_OBJECT
 
 public:
-    OptionsDialog(Session& session, Prefs const& prefs, AddData const& addme, QWidget* parent = nullptr);
+    OptionsDialog(Session& session, Prefs const& prefs, TorrentModel const& torrents, AddData const& addme,
+        QWidget* parent = nullptr);
     virtual ~OptionsDialog();
 
 private:
@@ -61,6 +63,7 @@ private slots:
 
 private:
     Session& mySession;
+    TorrentModel const& myModel;
     AddData myAdd;
 
     Ui::OptionsDialog ui;

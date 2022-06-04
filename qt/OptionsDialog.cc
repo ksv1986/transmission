@@ -8,6 +8,7 @@
 
 #include <QFileInfo>
 #include <QPushButton>
+#include <QStandardItemModel>
 
 #include <libtransmission/transmission.h>
 #include <libtransmission/utils.h> /* mime64 */
@@ -25,9 +26,11 @@
 ****
 ***/
 
-OptionsDialog::OptionsDialog(Session& session, Prefs const& prefs, AddData const& addme, QWidget* parent) :
+OptionsDialog::OptionsDialog(Session& session, Prefs const& prefs, TorrentModel const& torrents, AddData const& addme,
+    QWidget* parent) :
     BaseDialog(parent),
     mySession(session),
+    myModel(torrents),
     myAdd(addme),
     myIsLocal(mySession.isLocal()),
     myHaveInfo(false),
@@ -86,7 +89,8 @@ OptionsDialog::OptionsDialog(Session& session, Prefs const& prefs, AddData const
     ui.destinationButton->setMode(PathButton::DirectoryMode);
     ui.destinationButton->setTitle(tr("Select Destination"));
     ui.destinationButton->setPath(downloadDir);
-    ui.destinationEdit->setText(downloadDir);
+    ui.destinationBox->setModel(myModel.pathModel());
+    ui.destinationBox->setCurrentText(downloadDir);
 
     if (myIsLocal)
     {
@@ -94,8 +98,8 @@ OptionsDialog::OptionsDialog(Session& session, Prefs const& prefs, AddData const
     }
 
     connect(ui.destinationButton, SIGNAL(pathChanged(QString)), this, SLOT(onDestinationChanged()));
-    connect(ui.destinationEdit, SIGNAL(textEdited(QString)), &myEditTimer, SLOT(start()));
-    connect(ui.destinationEdit, SIGNAL(editingFinished()), this, SLOT(onDestinationChanged()));
+    connect(ui.destinationBox, SIGNAL(textEdited(QString)), &myEditTimer, SLOT(start()));
+    connect(ui.destinationBox, SIGNAL(editingFinished()), this, SLOT(onDestinationChanged()));
 
     ui.filesView->setEditable(false);
 
@@ -207,7 +211,7 @@ void OptionsDialog::reload()
 
 void OptionsDialog::updateWidgetsLocality()
 {
-    ui.destinationStack->setCurrentWidget(myIsLocal ? static_cast<QWidget*>(ui.destinationButton) : ui.destinationEdit);
+    ui.destinationStack->setCurrentWidget(myIsLocal ? static_cast<QWidget*>(ui.destinationButton) : ui.destinationBox);
     ui.destinationStack->setFixedHeight(ui.destinationStack->currentWidget()->sizeHint().height());
     ui.destinationLabel->setBuddy(ui.destinationStack->currentWidget());
 
@@ -259,7 +263,7 @@ void OptionsDialog::onAccepted()
     }
     else
     {
-        downloadDir = ui.destinationEdit->text();
+        downloadDir = ui.destinationBox->currentText();
     }
 
     tr_variantDictAddStr(&args, TR_KEY_download_dir, downloadDir.toUtf8().constData());
@@ -348,7 +352,7 @@ void OptionsDialog::onDestinationChanged()
     }
     else
     {
-        ui.freeSpaceLabel->setPath(ui.destinationEdit->text());
+        ui.freeSpaceLabel->setPath(ui.destinationBox->currentText());
     }
 }
 

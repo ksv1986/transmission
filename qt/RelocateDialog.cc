@@ -7,6 +7,8 @@
  */
 
 #include <QDir>
+#include <QLineEdit>
+#include <QStandardItemModel>
 
 #include "RelocateDialog.h"
 #include "Session.h"
@@ -67,9 +69,22 @@ RelocateDialog::RelocateDialog(Session& session, TorrentModel const& model, torr
     }
     else
     {
-        ui.newLocationStack->setCurrentWidget(ui.newLocationEdit);
-        ui.newLocationEdit->setText(path);
-        ui.newLocationEdit->selectAll();
+        auto* m = model.pathModel();
+        ui.newLocationStack->setCurrentWidget(ui.newLocationBox);
+        ui.newLocationBox->setModel(m);
+        ui.newLocationBox->setCurrentText(path);
+        for (auto i = 0; i < m->rowCount(); ++i)
+        {
+            auto index = m->index(i, 0);
+            auto const& data = m->data(index, TorrentModel::PathRole).toString();
+            if (path == data)
+            {
+                ui.newLocationBox->setCurrentIndex(i);
+                break;
+            }
+        }
+
+        ui.newLocationBox->lineEdit()->selectAll();
     }
 
     ui.newLocationStack->setFixedHeight(ui.newLocationStack->currentWidget()->sizeHint().height());
@@ -91,6 +106,7 @@ RelocateDialog::RelocateDialog(Session& session, TorrentModel const& model, torr
 
 QString RelocateDialog::newLocation() const
 {
-    return ui.newLocationStack->currentWidget() == ui.newLocationButton ? ui.newLocationButton->path() :
-        ui.newLocationEdit->text();
+    return ui.newLocationStack->currentWidget() == ui.newLocationButton ?
+        ui.newLocationButton->path() :
+        ui.newLocationBox->currentText();
 }
