@@ -9,10 +9,16 @@
 
 #include "FilterBarComboBox.h"
 #include "StyleHelper.h"
+#include "TorrentModel.h"
 #include "Utils.h"
 
 namespace
 {
+enum
+{
+    CountRole = TorrentModel::CountRole,
+    CountStringRole = TorrentModel::CountStringRole,
+};
 
 int getHSpacing(QWidget const* w)
 {

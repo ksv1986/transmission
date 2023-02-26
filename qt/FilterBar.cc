@@ -29,9 +29,9 @@
 
 enum
 {
-    ACTIVITY_ROLE = FilterBarComboBox::UserRole,
-    PATH_ROLE,
-    TRACKER_ROLE
+    ACTIVITY_ROLE = TorrentModel::ActivityRole,
+    PATH_ROLE = TorrentModel::PathRole,
+    TRACKER_ROLE = TorrentModel::TrackerRole
 };
 
 /***
@@ -111,8 +111,8 @@ FilterBarComboBox* createCombo(QWidget* parent, int role, int count, QStandardIt
 
     auto* row = new QStandardItem(parent->tr("All"));
     row->setData(QString(), role);
-    row->setData(count, FilterBarComboBox::CountRole);
-    row->setData(getCountString(static_cast<size_t>(count)), FilterBarComboBox::CountStringRole);
+    row->setData(count, TorrentModel::CountRole);
+    row->setData(getCountString(static_cast<size_t>(count)), TorrentModel::CountStringRole);
     model->appendRow(row);
 
     model->appendRow(new QStandardItem); // separator
@@ -138,8 +138,8 @@ void FilterBar::refreshFilter(Map& map, QStandardItemModel* model, Counts& count
     // update the "All" row
     auto const num = counts.size();
     auto* item = model->item(ROW_TOTALS);
-    item->setData(int(num), FilterBarComboBox::CountRole);
-    item->setData(getCountString(num), FilterBarComboBox::CountStringRole);
+    item->setData(int(num), TorrentModel::CountRole);
+    item->setData(getCountString(num), TorrentModel::CountStringRole);
 
     auto new_map = Map(counts.begin(), counts.end());
     auto old_it = map.cbegin();
@@ -201,9 +201,9 @@ void FilterBar::refreshTrackers()
 
         i->setData(display_name, Qt::DisplayRole);
         i->setData(display_name, TRACKER_ROLE);
-        i->setData(getCountString(static_cast<size_t>(count)), FilterBarComboBox::CountStringRole);
+        i->setData(getCountString(static_cast<size_t>(count)), TorrentModel::CountStringRole);
         i->setData(icon, Qt::DecorationRole);
-        i->setData(static_cast<int>(count), FilterBarComboBox::CountRole);
+        i->setData(static_cast<int>(count), TorrentModel::CountRole);
 
         return i;
     };
@@ -217,9 +217,9 @@ void FilterBar::refreshTrackers()
         auto const icon = IconCache::get().folderIcon();
         i->setData(displayName, Qt::DisplayRole);
         i->setData(displayName, PATH_ROLE);
-        i->setData(getCountString(count), FilterBarComboBox::CountStringRole);
+        i->setData(getCountString(count), TorrentModel::CountStringRole);
         i->setData(icon, Qt::DecorationRole);
-        i->setData(int(count), FilterBarComboBox::CountRole);
+        i->setData(int(count), TorrentModel::CountRole);
         return i;
     };
 
@@ -423,8 +423,8 @@ void FilterBar::recount()
             auto const index = model->index(row, 0);
             auto const mode = index.data(ACTIVITY_ROLE).toInt();
             auto const count = torrents_per_mode[mode];
-            model->setData(index, count, FilterBarComboBox::CountRole);
-            model->setData(index, getCountString(static_cast<size_t>(count)), FilterBarComboBox::CountStringRole);
+            model->setData(index, count, TorrentModel::CountRole);
+            model->setData(index, getCountString(static_cast<size_t>(count)), TorrentModel::CountStringRole);
         }
     }
 
