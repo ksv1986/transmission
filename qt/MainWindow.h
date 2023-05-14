@@ -32,6 +32,7 @@ class QMenu;
 class AboutDialog;
 class AddData;
 class DetailsDialog;
+class FilterBar;
 class ListViewProxyStyle;
 class Prefs;
 class PrefsDialog;
@@ -174,7 +175,7 @@ private:
     QAction* ratio_off_action_ = {};
     QAction* ratio_on_action_ = {};
     QWidgetList hidden_;
-    QWidget* filter_bar_ = {};
+    FilterBar* filter_bar_ = {};
     QAction* alt_speed_action_ = {};
     QString error_message_;
     bool auto_add_clipboard_links = {};

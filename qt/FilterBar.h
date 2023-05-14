@@ -39,6 +39,10 @@ public:
     FilterBar(Prefs& prefs, TorrentModel const& torrents, TorrentFilter const& filter, QWidget* parent = nullptr);
 
 public slots:
+    void setStatesVisible(bool);
+    void setTrackersVisible(bool);
+    void setPathsVisible(bool);
+    void setFilterVisible(bool);
     void clear();
 
 private:
