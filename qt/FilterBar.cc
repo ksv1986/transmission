@@ -433,3 +433,23 @@ void FilterBar::recount()
         refreshTrackers();
     }
 }
+
+void FilterBar::setFilterVisible(bool visible)
+{
+    line_edit_->setVisible(visible);
+}
+
+void FilterBar::setTrackersVisible(bool visible)
+{
+    tracker_combo_->setVisible(visible);
+}
+
+void FilterBar::setPathsVisible(bool visible)
+{
+    path_combo_->setVisible(visible);
+}
+
+void FilterBar::setStatesVisible(bool visible)
+{
+    activity_combo_->setVisible(visible);
+}

@@ -242,6 +242,15 @@
     <addaction name="action_Contents"/>
     <addaction name="action_About"/>
    </widget>
+   <widget class="QMenu" name="filterbarMenu">
+     <property name="title">
+      <string>Filterbar items</string>
+     </property>
+     <addaction name="action_Filterbar_States"/>
+     <addaction name="action_Filterbar_Trackers"/>
+     <addaction name="action_Filterbar_Paths"/>
+     <addaction name="action_Filterbar_Filter"/>
+   </widget>
    <widget class="QMenu" name="menu_View">
     <property name="title">
      <string>&amp;View</string>
@@ -250,6 +259,7 @@
     <addaction name="separator"/>
     <addaction name="action_Toolbar"/>
     <addaction name="action_Filterbar"/>
+    <addaction name="filterbarMenu"/>
     <addaction name="action_Statusbar"/>
     <addaction name="separator"/>
     <addaction name="action_SortByActivity"/>
@@ -511,6 +521,50 @@
    </property>
    <property name="text">
     <string>&amp;Filterbar</string>
+   </property>
+  </action>
+  <action name="action_Filterbar_States">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>States</string>
+   </property>
+  </action>
+  <action name="action_Filterbar_Trackers">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Trackers</string>
+   </property>
+  </action>
+  <action name="action_Filterbar_Paths">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Paths</string>
+   </property>
+  </action>
+  <action name="action_Filterbar_Filter">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Filter</string>
    </property>
   </action>
   <action name="action_Statusbar">
