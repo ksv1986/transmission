@@ -298,6 +298,10 @@ MainWindow::MainWindow(Session& session, Prefs& prefs, TorrentModel& model, bool
     auto* filter_bar = new FilterBar(prefs_, model_, filter_model_);
     ui_.verticalLayout->insertWidget(0, filter_bar);
     filter_bar_ = filter_bar;
+    connect(ui_.action_Filterbar_States, &QAction::toggled, filter_bar_, &FilterBar::setStatesVisible);
+    connect(ui_.action_Filterbar_Trackers, &QAction::toggled, filter_bar_, &FilterBar::setTrackersVisible);
+    connect(ui_.action_Filterbar_Paths, &QAction::toggled, filter_bar_, &FilterBar::setPathsVisible);
+    connect(ui_.action_Filterbar_Filter, &QAction::toggled, filter_bar_, &FilterBar::setFilterVisible);
 
     auto refresh_header_soon = [this]()
     {
@@ -1080,6 +1084,7 @@ void MainWindow::setToolbarVisible(bool visible)
 void MainWindow::setFilterbarVisible(bool visible)
 {
     prefs_.set(Prefs::FILTERBAR, visible);
+    ui_.filterbarMenu->setEnabled(visible);
 }
 
 void MainWindow::setStatusbarVisible(bool visible)
