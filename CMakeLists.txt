@@ -186,7 +186,7 @@ if(WIN32)
             # Set source file encoding and execution charset to UTF-8
             set(CMAKE_${L}_FLAGS "${CMAKE_${L}_FLAGS} /utf-8")
             # Reduce noise (at least for now)
-            set(CMAKE_${L}_FLAGS "${CMAKE_${L}_FLAGS} /wd4244 /wd4267")
+            set(CMAKE_${L}_FLAGS "${CMAKE_${L}_FLAGS} /wd4702 /wd4244 /wd4267")
             # Make caching-friendly (store debug info inside object files)
             foreach(T IN ITEMS ${CMAKE_CONFIGURATION_TYPES} ${CMAKE_BUILD_TYPE})
                 string(TOUPPER "${T}" T)
