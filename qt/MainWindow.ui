@@ -325,6 +325,7 @@
    <addaction name="action_Remove"/>
    <addaction name="separator"/>
    <addaction name="action_Properties"/>
+   <addaction name="action_Preferences"/>
   </widget>
   <action name="action_OpenFile">
    <property name="text">
