@@ -20,7 +20,8 @@ class FilterBase : public IF_GTKMM4(Gtk::Filter, Glib::Object)
 {
 public:
 #if !GTKMM_CHECK_VERSION(4, 0, 0)
-    enum class Change{
+    enum class Change
+    {
         DIFFERENT,
         LESS_STRICT,
         MORE_STRICT,
