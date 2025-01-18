@@ -18,6 +18,7 @@
 
 #include <libtransmission/tr-macros.h>
 
+#include "FilterBarComboBoxDelegate.h"
 #include "Torrent.h"
 #include "Typedefs.h"
 
@@ -59,6 +60,11 @@ public:
     torrents_t const& torrents() const
     {
         return torrents_;
+    }
+
+    QAbstractItemModel* pathModel() const
+    {
+        return path_proxy_;
     }
 
     QStandardItemModel* pathFilterModel() const
@@ -118,6 +124,7 @@ private:
     torrents_t torrents_;
     QStandardItemModel* path_model_;
     QStandardItemModel* tracker_model_;
+    QAbstractItemModel* path_proxy_;
     Pending pending_;
     QTimer recount_timer_;
     Map path_counts_;

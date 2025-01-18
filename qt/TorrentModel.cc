@@ -9,6 +9,8 @@
 #include <set>
 #include <string_view>
 
+#include <QSortFilterProxyModel>
+
 #include <libtransmission/transmission.h>
 #include <libtransmission/variant.h>
 
@@ -92,6 +94,26 @@ std::array<int, FilterMode::NUM_MODES> countTorrentsPerMode(TorrentModel::torren
     return torrent_counts;
 }
 
+class PathProxy : public QSortFilterProxyModel
+{
+public:
+    TR_DISABLE_COPY_MOVE(PathProxy)
+
+    PathProxy(QObject* parent, QAbstractItemModel* source)
+        : QSortFilterProxyModel(parent)
+    {
+        setSourceModel(source);
+    }
+
+protected:
+    bool filterAcceptsRow(int source_row, QModelIndex const& source_parent) const override
+    {
+        Q_UNUSED(source_parent);
+
+        return source_row > 1; // skip "All" and separator
+    }
+};
+
 } // namespace
 
 /***
@@ -102,6 +124,7 @@ TorrentModel::TorrentModel(Prefs const& prefs)
     : prefs_(prefs)
     , path_model_(new QStandardItemModel(this))
     , tracker_model_(new QStandardItemModel(this))
+    , path_proxy_(new PathProxy(this, path_model_))
 {
     connect(this, &TorrentModel::modelReset, this, &TorrentModel::recountAllSoon);
     connect(this, &TorrentModel::rowsInserted, this, &TorrentModel::recountAllSoon);
