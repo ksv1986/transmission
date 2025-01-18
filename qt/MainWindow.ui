@@ -326,6 +326,7 @@
    <addaction name="separator"/>
    <addaction name="action_Properties"/>
    <addaction name="action_Preferences"/>
+   <addaction name="action_SessionDialog"/>
   </widget>
   <action name="action_OpenFile">
    <property name="text">
