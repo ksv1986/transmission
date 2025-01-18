@@ -5,13 +5,7 @@
 
 #pragma once
 
-#include <bitset>
-#include <map>
-#include <unordered_map>
-
 #include <QLineEdit>
-#include <QStandardItemModel>
-#include <QTimer>
 #include <QWidget>
 
 #include <libtransmission/tr-macros.h>
@@ -22,7 +16,7 @@
 
 class QLabel;
 class QLineEdit;
-class QStandardItem;
+class QStandardItemModel;
 class QString;
 
 class FilterBarComboBox;
@@ -46,67 +40,24 @@ public slots:
     void clear();
 
 private:
-    using Map = std::map<QString, int>;
-    using MapIter = Map::const_iterator;
-    using Counts = std::unordered_map<QString, int>;
-    using MapUpdate = QStandardItem* (*)(QStandardItem* i, MapIter const& it);
-
-    FilterBarComboBox* createTrackerCombo(QStandardItemModel*);
+    FilterBarComboBox* createFilterCombo(int role, int count, QStandardItemModel* model);
     FilterBarComboBox* createActivityCombo();
-    FilterBarComboBox* createPathCombo(QStandardItemModel*);
-    void refreshFilter(Map& map, QStandardItemModel* model, Counts& counts, MapUpdate itemUpdate, int key);
-    void refreshTrackers();
-
-    enum
-    {
-        ACTIVITY,
-        TRACKERS,
-
-        NUM_FLAGS
-    };
-
-    using Pending = std::bitset<NUM_FLAGS>;
 
     Prefs& prefs_;
     TorrentModel const& torrents_;
     TorrentFilter const& filter_;
 
-    Map path_counts_;
-    Map sitename_counts_;
     FilterBarComboBox* activity_combo_ = createActivityCombo();
     FilterBarComboBox* path_combo_ = {};
     FilterBarComboBox* tracker_combo_ = {};
     QLabel* count_label_ = {};
-    QStandardItemModel* const path_model_ = new QStandardItemModel{ this };
-    QStandardItemModel* const tracker_model_ = new QStandardItemModel{ this };
-    QTimer recount_timer_;
     QLineEdit* const line_edit_ = new QLineEdit{ this };
-    Pending pending_ = {};
     bool is_bootstrapping_ = {};
 
 private slots:
-    void recount();
-    void recountSoon(Pending const& fields);
-
-    void recountActivitySoon()
-    {
-        recountSoon(Pending().set(ACTIVITY));
-    }
-
-    void recountTrackersSoon()
-    {
-        recountSoon(Pending().set(TRACKERS));
-    }
-
-    void recountAllSoon()
-    {
-        recountSoon(Pending().set(ACTIVITY).set(TRACKERS));
-    }
-
     void refreshPref(int key);
     void onActivityIndexChanged(int index);
     void onPathIndexChanged(int index);
     void onTextChanged(QString const&);
-    void onTorrentsChanged(torrent_ids_t const&, Torrent::fields_t const& fields);
     void onTrackerIndexChanged(int index);
 };
