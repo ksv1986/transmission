@@ -12,13 +12,6 @@ class FilterBarComboBox : public QComboBox
     Q_OBJECT
 
 public:
-    enum
-    {
-        CountRole = Qt::UserRole + 1,
-        CountStringRole,
-        UserRole
-    };
-
     explicit FilterBarComboBox(QWidget* parent = nullptr);
     FilterBarComboBox(FilterBarComboBox&&) = delete;
     FilterBarComboBox(FilterBarComboBox const&) = delete;

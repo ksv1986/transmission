@@ -28,8 +28,8 @@
 
 enum
 {
-    ACTIVITY_ROLE = FilterBarComboBox::UserRole,
-    TRACKER_ROLE
+    ACTIVITY_ROLE = TorrentModel::ActivityRole,
+    TRACKER_ROLE = TorrentModel::TrackerRole,
 };
 
 /***
@@ -120,8 +120,8 @@ void FilterBar::refreshTrackers()
     // update the "All" row
     auto const num_trackers = torrents_per_sitename.size();
     auto* item = tracker_model_->item(ROW_TOTALS);
-    item->setData(static_cast<int>(num_trackers), FilterBarComboBox::CountRole);
-    item->setData(getCountString(num_trackers), FilterBarComboBox::CountStringRole);
+    item->setData(static_cast<int>(num_trackers), TorrentModel::CountRole);
+    item->setData(getCountString(num_trackers), TorrentModel::CountStringRole);
 
     auto update_tracker_item = [](QStandardItem* i, auto const& it)
     {
@@ -130,9 +130,9 @@ void FilterBar::refreshTrackers()
 
         i->setData(display_name, Qt::DisplayRole);
         i->setData(display_name, TRACKER_ROLE);
-        i->setData(getCountString(static_cast<size_t>(count)), FilterBarComboBox::CountStringRole);
+        i->setData(getCountString(static_cast<size_t>(count)), TorrentModel::CountStringRole);
         i->setData(trApp->find_favicon(sitename), Qt::DecorationRole);
-        i->setData(static_cast<int>(count), FilterBarComboBox::CountRole);
+        i->setData(static_cast<int>(count), TorrentModel::CountRole);
 
         return i;
     };
@@ -185,8 +185,8 @@ FilterBarComboBox* FilterBar::createTrackerCombo(QStandardItemModel* model)
     auto* row = new QStandardItem{ tr("All") };
     row->setData(QString{}, TRACKER_ROLE);
     int const count = torrents_.rowCount();
-    row->setData(count, FilterBarComboBox::CountRole);
-    row->setData(getCountString(static_cast<size_t>(count)), FilterBarComboBox::CountStringRole);
+    row->setData(count, TorrentModel::CountRole);
+    row->setData(getCountString(static_cast<size_t>(count)), TorrentModel::CountStringRole);
     model->appendRow(row);
 
     model->appendRow(new QStandardItem{}); // separator
@@ -369,8 +369,8 @@ void FilterBar::recount()
             auto const index = model->index(row, 0);
             auto const show_mode = index.data(ACTIVITY_ROLE).value<ShowMode>();
             auto const count = torrents_per_mode[static_cast<int>(show_mode)];
-            model->setData(index, count, FilterBarComboBox::CountRole);
-            model->setData(index, getCountString(count), FilterBarComboBox::CountStringRole);
+            model->setData(index, count, TorrentModel::CountRole);
+            model->setData(index, getCountString(count), TorrentModel::CountStringRole);
         }
     }
 
