@@ -476,6 +476,9 @@
    <property name="text">
     <string>&amp;Preferences</string>
    </property>
+   <property name="shortcut">
+    <string>F10</string>
+   </property>
    <property name="menuRole">
     <enum>QAction::PreferencesRole</enum>
    </property>
